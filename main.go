@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"time"
 )
 
 var nx int = 100
@@ -78,7 +79,10 @@ func main() {
 				}
 			}
 		}
-		fname := fmt.Sprint(i, ".ppm")
+		time := time.Now()
+		folder := time.Format("2006-01-02_15-04-05")
+		fname := fmt.Sprint(folder, "/", i, ".ppm")
+		os.Mkdir(folder, 0755)
 		writeImage(fname, newWorld)
 
 	}
