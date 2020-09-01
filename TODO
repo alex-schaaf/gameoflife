@@ -1,0 +1,5 @@
+
+Todo:
+  ☐ Save image files into datetime-named folder by default
+  ☐ Seed noise density parameter
+  ☐ `flags` for basic CLI functionality
