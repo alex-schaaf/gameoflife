@@ -10,10 +10,15 @@ import (
 
 var nx int = 100
 var ny int = 100
-var iterations = 100
+var iterations = 1000
 var seed int64 = 42
 
 func main() {
+	now := time.Now()
+	folder := now.Format("2006-01-02_15-04-05")
+	err := os.Mkdir(folder, 0755)
+	handle(err)
+
 	fmt.Println("This is the Game of Life..")
 	fmt.Println("Seeding a world of size", nx, "by", ny)
 
@@ -37,10 +42,8 @@ func main() {
 				}
 			}
 		}
-		time := time.Now()
-		folder := time.Format("2006-01-02_15-04-05")
+
 		fname := fmt.Sprint(folder, "/", i, ".ppm")
-		os.Mkdir(folder, 0755)
 		writeImage(fname, newWorld)
 	}
 }
