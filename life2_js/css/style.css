@@ -1,0 +1,21 @@
+body {
+    margin: 5px;
+    background-color: #151515;
+}
+
+.container {
+    padding: 5 0 0 0px;
+}
+
+canvas {
+    border: 1px solid #FDBD0D;
+}
+
+button {
+    background-color: #FDBD0D;
+    border: 0px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}

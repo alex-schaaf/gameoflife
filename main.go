@@ -1,52 +1,32 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"github.com/gdamore/tcell"
 	"math/rand"
 	"os"
 	"time"
 )
 
-var nx int = 100
-var ny int = 100
-var iterations = 100
-var seed int64 = 42
-
-func handle(err error) {
-	if err != nil {
-		fmt.Println(err)
-		return
+func initialize() tcell.Screen {
+	screen, e := tcell.NewScreen()
+	if e != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", e)
+		os.Exit(1)
 	}
+	if e := screen.Init(); e != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", e)
+		os.Exit(1)
+	}
+
+	defStyle := tcell.StyleDefault.
+		Background(tcell.ColorWhite).
+		Foreground(tcell.ColorBlack)
+	screen.SetStyle(defStyle)
+	return screen
 }
 
-func writeImage(fp string, arr [][]int) {
-	f, err := os.Create(fp)
-	handle(err)
-	defer f.Close()
-
-	w := bufio.NewWriter(f)
-
-	fmt.Fprintf(w, "P1\n")
-	fmt.Fprintf(w, "#\n")
-	fmt.Fprintf(w, "%v ", len(arr))
-	fmt.Fprintf(w, "%v\n", len(arr[0]))
-
-	for i := range arr {
-		for j := range arr[i] {
-			if j < len(arr[i])-1 {
-				fmt.Fprintf(w, "%v ", arr[i][j])
-			} else {
-				fmt.Fprintf(w, "%v\n", arr[i][j])
-			}
-		}
-	}
-	w.Flush()
-}
-
-func main() {
-	fmt.Println("This is the Game of Life..")
-	fmt.Println("Seeding a world of size", nx, "by", ny)
+func seedWorld(nx int, ny int, seed int64) [][]int {
 	world := make([][]int, nx)
 	rows := make([]int, nx*ny)
 	for i := 0; i < nx; i++ {
@@ -61,7 +41,38 @@ func main() {
 		}
 	}
 
-	for i := 0; i < iterations; i++ {
+	return world
+}
+
+// Check the neighbors of cell in world at given x, y coordinates
+// and return the sum of the number of neighbors.
+func checkNeighbors(x int, y int, world [][]int) int {
+	var neighbors = 0
+
+	neighbors += world[x-1][y]
+	neighbors += world[x+1][y]
+	neighbors += world[x][y+1]
+	neighbors += world[x][y-1]
+
+	neighbors += world[x-1][y+1]
+	neighbors += world[x-1][y-1]
+	neighbors += world[x+1][y+1]
+	neighbors += world[x+1][y-1]
+	return neighbors
+}
+
+// This program just prints "Hello, World!".  Press ESC to exit.
+func main() {
+	screen := initialize()
+	//screen.SetContent(0,0, rune('h'), []rune(""), tcell.StyleDefault)
+	screen.Show()
+
+	var nx = 111
+	var ny = 22
+
+	world := seedWorld(nx, ny, 42)
+
+	for i := 0; i < 100; i++ {
 		newWorld := world
 		for x := 1; x < nx-1; x++ {
 			for y := 1; y < ny-1; y++ {
@@ -77,28 +88,29 @@ func main() {
 				} else if alive == 0 && neighbors == 3 {
 					newWorld[x][y] = 1
 				}
+
+				if world[x][y] == 1 {
+					screen.SetContent(x, y, tcell.RuneBlock, []rune(""), tcell.StyleDefault)
+				} else {
+					screen.SetContent(x, y, rune(' '), []rune(""), tcell.StyleDefault)
+				}
+
 			}
 		}
-		time := time.Now()
-		folder := time.Format("2006-01-02_15-04-05")
-		fname := fmt.Sprint(folder, "/", i, ".ppm")
-		os.Mkdir(folder, 0755)
-		writeImage(fname, newWorld)
-
+		screen.Show()
+		time.Sleep(100 * time.Millisecond)
 	}
-}
 
-func checkNeighbors(x int, y int, world [][]int) int {
-	var neighbors = 0
-
-	neighbors += world[x-1][y]
-	neighbors += world[x+1][y]
-	neighbors += world[x][y+1]
-	neighbors += world[x][y-1]
-
-	neighbors += world[x-1][y+1]
-	neighbors += world[x-1][y-1]
-	neighbors += world[x+1][y+1]
-	neighbors += world[x+1][y-1]
-	return neighbors
+	// key handling
+	for {
+		switch ev := screen.PollEvent().(type) {
+		case *tcell.EventResize:
+			screen.Sync()
+		case *tcell.EventKey:
+			if ev.Key() == tcell.KeyEscape {
+				screen.Fini()
+				os.Exit(0)
+			}
+		}
+	}
 }
