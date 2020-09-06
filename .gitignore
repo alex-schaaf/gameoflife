@@ -12,7 +12,7 @@
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test binary, built with `go test.ppm -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
@@ -241,7 +241,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit test.ppm / coverage reports
 htmlcov/
 .tox/
 .nox/
