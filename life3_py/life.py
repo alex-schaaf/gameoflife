@@ -54,8 +54,9 @@ def simulate(
         iterations: int,
         density: float = 0.5,
         zoom: int = 5,
+        name: str = None,
 ):
-    folder = str(datetime.now())
+    folder = name if name else str(datetime.now())
     os.mkdir(folder)
     life = Life(nx, ny, seed, density=density)
 
