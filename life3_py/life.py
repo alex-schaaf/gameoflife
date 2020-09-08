@@ -31,7 +31,7 @@ class Life:
         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
         self.world = np.int8(boolean)
 
-    def write_ppm(self, filepath: str, zoom: int = 4):
+    def write_ppm(self, filepath: str, zoom: int = 5):
         with open(filepath, "w") as file:
             file.write("P1\n")
             file.write("#\n")
@@ -53,6 +53,7 @@ def simulate(
         seed: int,
         iterations: int,
         density: float = 0.5,
+        zoom: int = 5,
 ):
     folder = str(datetime.now())
     os.mkdir(folder)
@@ -60,7 +61,7 @@ def simulate(
 
     for i in tqdm(range(iterations)):
         life.evolve()
-        life.write_ppm(f"{folder}/{i}.ppm")
+        life.write_ppm(f"{folder}/{i}.ppm", zoom=zoom)
 
 
 if __name__ == "__main__":
