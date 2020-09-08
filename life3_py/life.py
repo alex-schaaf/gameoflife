@@ -1,6 +1,6 @@
 import typer
 import numpy as np
-import scipy.ndimage
+from scipy.ndimage.filters import convolve
 from tqdm import tqdm
 from datetime import datetime
 import os
@@ -24,7 +24,7 @@ class Life:
                            [1,10, 1],
                            [1, 1, 1]])
 
-        neighbors = scipy.ndimage.filters.convolve(
+        neighbors = convolve(
             self.world, kernel, mode=self.conv_edge_mode
         )
 
