@@ -4,7 +4,6 @@ import scipy.ndimage
 from tqdm import tqdm
 from datetime import datetime
 import os
-import cv2
 
 
 class Life:
@@ -32,18 +31,16 @@ class Life:
         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
         self.world = np.int8(boolean)
 
-    def write_ppm(self, filepath: str):
+    def write_ppm(self, filepath: str, zoom: int = 4):
         with open(filepath, "w") as file:
             file.write("P1\n")
             file.write("#\n")
-            file.write(f'{self.nx} {self.ny}\n')
+            file.write(f'{self.nx * zoom} {self.ny * zoom}\n')
             # file.write('255\n')  # max value
 
-            for row in self.world:
+            img = np.kron(self.world, np.ones((zoom, zoom))).astype(np.uint8)
+            for row in img:
                 file.write(str(row)[1:-1] + "\n")
-
-    def write_cv2(self, filepath: str):
-        pass
 
 
 app = typer.Typer()
