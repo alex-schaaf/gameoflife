@@ -32,13 +32,19 @@ class Life:
         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
         self.world = np.int8(boolean)
 
-    def zoom(self, zoom: int):
-        return np.kron(self.world, np.ones((zoom, zoom))).astype(np.uint8)
+    def evolve2(self):
+        pass
 
-    def write_pillow(self, fileapth: str, zoom: int = 5):
-        arr = self.zoom(zoom)
-        img = Image.fromarray(arr * 255)
-        img.save(fileapth)
+
+def enlarge(arr: np.array, zoom: int) -> np.ndarray:
+    """Enlarge the world array by given zoom level."""
+    return np.kron(arr, np.ones([zoom for _ in range(arr.ndim)])).astype(np.uint8)
+
+
+def write_pillow(arr: np.ndarray, filepath: str):
+    """Writes current world array to given filepath using Pillow."""
+    img = Image.fromarray(arr * 255)
+    img.save(filepath)
 
 
 app = typer.Typer()
@@ -53,7 +59,7 @@ def simulate(
         density: float = 0.5,
         zoom: int = 5,
         animate: bool = False,
-        format: str = "jpg",
+        filetype: str = "jpg",
         debug: bool = False,
 ):
     if debug:
@@ -70,11 +76,12 @@ def simulate(
     n_digits = len(str(iterations))
     for i in tqdm(range(iterations)):
         life.evolve()
-        life.write_pillow(f"{folder}/{str(i).zfill(n_digits)}.{format}", zoom=zoom)
+        arr = enlarge(life.world, zoom)
+        write_pillow(arr, f"{folder}/{str(i).zfill(n_digits)}.{filetype}")
 
     if animate:
         typer.echo("Animating image...")
-        os.system(f'magick convert ./{folder}/*.{format} ./{folder}/animation.gif')
+        os.system(f'magick convert ./{folder}/*.{filetype} ./{folder}/animation.gif')
         typer.echo("All done.")
 
 
