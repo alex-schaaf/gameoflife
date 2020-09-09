@@ -70,13 +70,16 @@ def simulate(
     os.mkdir(folder)
     life = Life(nx, ny, seed, density=density)
 
+    n_digits = len(str(iterations))
     for i in tqdm(range(iterations)):
-        life.evolve()
+        life.evolve()        
         # life.write_ppm(f"{folder}/{i}.ppm", zoom=zoom)
-        life.write_pillow(f"{folder}/{i}.{format}", zoom=zoom)
+        life.write_pillow(f"{folder}/{str(i).zfill(n_digits)}.{format}", zoom=zoom)
 
     if animate:
+        typer.echo("Animating image...")
         os.system(f'magick convert ./{folder}/*.{format} ./{folder}/animation.gif')
+        typer.echo("All done.")
 
 
 if __name__ == "__main__":
