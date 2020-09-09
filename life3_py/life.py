@@ -32,17 +32,6 @@ class Life:
         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
         self.world = np.int8(boolean)
 
-    def write_ppm(self, filepath: str, zoom: int = 5):
-        with open(filepath, "w") as file:
-            file.write("P1\n")
-            file.write("#\n")
-            file.write(f'{self.nx * zoom} {self.ny * zoom}\n')
-            # file.write('255\n')  # max value
-
-            img = self.zoom(zoom)
-            for row in img:
-                file.write(str(row)[1:-1] + "\n")
-
     def zoom(self, zoom: int):
         return np.kron(self.world, np.ones((zoom, zoom))).astype(np.uint8)
 
@@ -72,8 +61,7 @@ def simulate(
 
     n_digits = len(str(iterations))
     for i in tqdm(range(iterations)):
-        life.evolve()        
-        # life.write_ppm(f"{folder}/{i}.ppm", zoom=zoom)
+        life.evolve()
         life.write_pillow(f"{folder}/{str(i).zfill(n_digits)}.{format}", zoom=zoom)
 
     if animate:
