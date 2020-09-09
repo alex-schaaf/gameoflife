@@ -54,10 +54,18 @@ def simulate(
         zoom: int = 5,
         animate: bool = False,
         format: str = "jpg",
+        debug: bool = False,
 ):
+    if debug:
+        for k, v in locals().items():
+            msg = typer.style(k, fg="white") + " " + typer.style(str(v), fg="red")
+            typer.echo(msg)
+
     folder = str(datetime.now()).replace(":", "-").split(".")[0].replace(" ", "-")
     os.mkdir(folder)
     life = Life(nx, ny, seed, density=density)
+
+    typer.secho("Evolving life..", fg="green")
 
     n_digits = len(str(iterations))
     for i in tqdm(range(iterations)):
