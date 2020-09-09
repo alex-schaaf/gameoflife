@@ -4,6 +4,7 @@ import scipy.ndimage
 from tqdm import tqdm
 from datetime import datetime
 import os
+from PIL import Image
 
 
 class Life:
@@ -38,9 +39,17 @@ class Life:
             file.write(f'{self.nx * zoom} {self.ny * zoom}\n')
             # file.write('255\n')  # max value
 
-            img = np.kron(self.world, np.ones((zoom, zoom))).astype(np.uint8)
+            img = self.zoom(zoom)
             for row in img:
                 file.write(str(row)[1:-1] + "\n")
+
+    def zoom(self, zoom: int):
+        return np.kron(self.world, np.ones((zoom, zoom))).astype(np.uint8)
+
+    def write_pillow(self, fileapth: str, zoom: int = 5):
+        arr = self.zoom(zoom)
+        img = Image.fromarray(arr * 255)
+        img.save(fileapth)
 
 
 app = typer.Typer()
@@ -54,14 +63,20 @@ def simulate(
         iterations: int,
         density: float = 0.5,
         zoom: int = 5,
+        animate: bool = False,
+        format: str = "jpg",
 ):
-    folder = str(datetime.now())
+    folder = str(datetime.now()).replace(":", "-").split(".")[0].replace(" ", "-")
     os.mkdir(folder)
     life = Life(nx, ny, seed, density=density)
 
     for i in tqdm(range(iterations)):
         life.evolve()
-        life.write_ppm(f"{folder}/{i}.ppm", zoom=zoom)
+        # life.write_ppm(f"{folder}/{i}.ppm", zoom=zoom)
+        life.write_pillow(f"{folder}/{i}.{format}", zoom=zoom)
+
+    if animate:
+        os.system(f'magick convert ./{folder}/*.{format} ./{folder}/animation.gif')
 
 
 if __name__ == "__main__":
