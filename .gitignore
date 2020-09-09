@@ -3,6 +3,8 @@
 *.png
 *.gif
 
+Pipfile.lock
+
 # Created by https://www.toptal.com/developers/gitignore/api/linux,windows,go,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=linux,windows,go,visualstudiocode
 
