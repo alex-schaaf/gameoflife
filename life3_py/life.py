@@ -44,50 +44,6 @@ class Life1(GameOfLife):
         self.world = np.int8(boolean)
 
 
-# class Life:
-#     def __init__(self, nx: int, ny: int, seed: int, density: float = 0.5):
-#         self.nx = nx
-#         self.ny = ny
-#         self.seed = seed
-#
-#         self.density = density
-#         self.world = np.random.binomial(1, self.density, size=(nx, ny))
-#         self.worldc = np.zeros_like(self.world)
-#
-#         self.conv_edge_mode = "reflect"
-#         self.cmap = get_cmap("viridis_r")
-#
-#     def evolve(self):
-#         # this awesome implementation comes from
-#         # http://greenteapress.com/complexity/html/thinkcomplexity008.html
-#         kernel = np.array([[1, 1, 1],
-#                            [1,10, 1],
-#                            [1, 1, 1]])
-#
-#         neighbors = scipy.ndimage.filters.convolve(
-#             self.world, kernel, mode=self.conv_edge_mode
-#         )
-#
-#         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
-#         self.world = np.int8(boolean)
-#
-#     def evolve2(self):
-#         kernel = np.array([[1, 1, 1],
-#                            [1,10, 1],
-#                            [1, 1, 1]])
-#
-#         neighbors = scipy.ndimage.filters.convolve(
-#             self.world, kernel, mode=self.conv_edge_mode
-#         )
-#
-#         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
-#         self.world = np.int8(boolean)
-#
-#         self.worldc[boolean] = 255
-#         self.worldc[~boolean] -= 31
-#         self.worldc[self.worldc <= 0] = 0
-
-
 def enlarge(arr: np.array, zoom: int) -> np.ndarray:
     """Enlarge the world array by given zoom level."""
     return np.kron(arr, np.ones((zoom, zoom)).astype(np.uint8))
