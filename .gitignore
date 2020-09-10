@@ -1,4 +1,6 @@
 *.ppm
+*.jpg
+*.png
 *.gif
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,windows,go,visualstudiocode
