@@ -51,7 +51,7 @@ def enlarge(arr: np.array, zoom: int) -> np.ndarray:
 
 def write_pillow(arr: np.ndarray, filepath: str):
     """Writes current world array to given filepath using Pillow."""
-    img = Image.fromarray(arr * 255)
+    img = Image.fromarray(arr * 255).convert("RGB")
     img.save(filepath)
 
 
