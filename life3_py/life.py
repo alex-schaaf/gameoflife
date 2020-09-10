@@ -29,12 +29,12 @@ class Life1(GameOfLife):
     def seed_world(self, density: float = 0.5):
         self.world = np.random.binomial(1, density, size=(self.nx, self.ny))
 
-    def evolve(self, conv_edge_mode: str = "wrap"):
+    def evolve(self, kernel: np.ndarray = None, conv_edge_mode: str = "wrap"):
         # this awesome implementation comes from
         # http://greenteapress.com/complexity/html/thinkcomplexity008.html
         kernel = np.array([[1, 1, 1],
                            [1, 10, 1],
-                           [1, 1, 1]])
+                           [1, 1, 1]]) if not kernel else kernel
 
         neighbors = scipy.ndimage.filters.convolve(
             self.world, kernel, mode=conv_edge_mode
@@ -51,8 +51,20 @@ def enlarge(arr: np.array, zoom: int) -> np.ndarray:
 
 def write_pillow(arr: np.ndarray, filepath: str):
     """Writes current world array to given filepath using Pillow."""
-    img = Image.fromarray(arr * 255).convert("RGB")
-    img.save(filepath)
+    Image.fromarray(arr * 255).convert("RGB").save(filepath)
+
+
+def kernel_circle(radius: int = 2, hollow: int = 1):
+    d = 2 * radius
+    xx, yy = np.mgrid[:d + 1, :d + 1]
+    circle = np.sqrt((xx - radius) ** 2 + (yy - radius) ** 2)
+    circle[circle > radius] = 0
+    if hollow:
+        circle2 = circle.copy()
+        circle2[circle2 < radius - 1] = 0
+        return np.logical_and(circle.astype(bool), circle2.astype(bool)).astype(int)
+    circle[radius, radius] = 1
+    return circle.astype(bool).astype(int)
 
 
 app = typer.Typer()
@@ -95,4 +107,5 @@ def simulate(
 
 
 if __name__ == "__main__":
+    print(kernel_circle(4))
     app()
