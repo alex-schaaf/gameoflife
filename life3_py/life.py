@@ -90,7 +90,7 @@ class Life1(GameOfLife):
 
 def enlarge(arr: np.array, zoom: int) -> np.ndarray:
     """Enlarge the world array by given zoom level."""
-    return np.kron(arr, np.ones([zoom for _ in range(arr.ndim)])).astype(np.uint8)
+    return np.kron(arr, np.ones((zoom, zoom)).astype(np.uint8))
 
 
 def write_pillow(arr: np.ndarray, filepath: str):
