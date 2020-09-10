@@ -6,50 +6,86 @@ from datetime import datetime
 import os
 from PIL import Image
 from matplotlib.pyplot import get_cmap
+from abc import ABC, abstractmethod
 
 
-class Life:
-    def __init__(self, nx: int, ny: int, seed: int, density: float = 0.5):
+class GameOfLife(ABC):
+    def __init__(self, nx: int, ny: int, seed: int):
         self.nx = nx
         self.ny = ny
         self.seed = seed
+        self.world = None
 
-        self.density = density
-        self.world = np.random.binomial(1, self.density, size=(nx, ny))
-        self.worldc = np.zeros_like(self.world)
+    @abstractmethod
+    def seed_world(self):
+        pass
 
-        self.conv_edge_mode = "reflect"
-        self.cmap = get_cmap("viridis_r")
-
+    @abstractmethod
     def evolve(self):
+        pass
+
+
+class Life1(GameOfLife):
+    def seed_world(self, density: float = 0.5):
+        self.world = np.random.binomial(1, density, size=(self.nx, self.ny))
+
+    def evolve(self, conv_edge_mode: str = "wrap"):
         # this awesome implementation comes from
         # http://greenteapress.com/complexity/html/thinkcomplexity008.html
         kernel = np.array([[1, 1, 1],
-                           [1,10, 1],
+                           [1, 10, 1],
                            [1, 1, 1]])
 
         neighbors = scipy.ndimage.filters.convolve(
-            self.world, kernel, mode=self.conv_edge_mode
+            self.world, kernel, mode=conv_edge_mode
         )
 
         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
         self.world = np.int8(boolean)
 
-    def evolve2(self):
-        kernel = np.array([[1, 1, 1],
-                           [1,10, 1],
-                           [1, 1, 1]])
 
-        neighbors = scipy.ndimage.filters.convolve(
-            self.world, kernel, mode=self.conv_edge_mode
-        )
-
-        boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
-        self.world = np.int8(boolean)
-
-        self.worldc[boolean] = 255
-        self.worldc[~boolean] -= 31
-        self.worldc[self.worldc <= 0] = 0
+# class Life:
+#     def __init__(self, nx: int, ny: int, seed: int, density: float = 0.5):
+#         self.nx = nx
+#         self.ny = ny
+#         self.seed = seed
+#
+#         self.density = density
+#         self.world = np.random.binomial(1, self.density, size=(nx, ny))
+#         self.worldc = np.zeros_like(self.world)
+#
+#         self.conv_edge_mode = "reflect"
+#         self.cmap = get_cmap("viridis_r")
+#
+#     def evolve(self):
+#         # this awesome implementation comes from
+#         # http://greenteapress.com/complexity/html/thinkcomplexity008.html
+#         kernel = np.array([[1, 1, 1],
+#                            [1,10, 1],
+#                            [1, 1, 1]])
+#
+#         neighbors = scipy.ndimage.filters.convolve(
+#             self.world, kernel, mode=self.conv_edge_mode
+#         )
+#
+#         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
+#         self.world = np.int8(boolean)
+#
+#     def evolve2(self):
+#         kernel = np.array([[1, 1, 1],
+#                            [1,10, 1],
+#                            [1, 1, 1]])
+#
+#         neighbors = scipy.ndimage.filters.convolve(
+#             self.world, kernel, mode=self.conv_edge_mode
+#         )
+#
+#         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
+#         self.world = np.int8(boolean)
+#
+#         self.worldc[boolean] = 255
+#         self.worldc[~boolean] -= 31
+#         self.worldc[self.worldc <= 0] = 0
 
 
 def enlarge(arr: np.array, zoom: int) -> np.ndarray:
@@ -86,16 +122,15 @@ def simulate(
     folder = str(datetime.now()).replace(":", "-").split(".")[0].replace(" ", "-")
     os.mkdir(folder)
 
-    life = Life(nx, ny, seed, density=density)
+    life = Life1(nx, ny, seed)
+    life.seed_world(density=density)
 
     typer.secho("Evolving life..", fg="green")
     n_digits = len(str(iterations))
     for i in tqdm(range(iterations)):
-        life.evolve2()
-        arr = enlarge(life.worldc, zoom) / 255
-        carr = life.cmap(arr)[:, :, :3] * 255
-
-        write_pillow(carr.astype(np.uint8), f"{folder}/{str(i).zfill(n_digits)}.{filetype}")
+        life.evolve()
+        arr = enlarge(life.world, zoom=zoom)
+        write_pillow(arr, f"{folder}/{str(i).zfill(n_digits)}.{filetype}")
 
     if animate:
         typer.echo("Animating image...")
