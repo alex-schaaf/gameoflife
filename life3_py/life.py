@@ -5,6 +5,7 @@ from tqdm import tqdm
 from datetime import datetime
 import os
 from PIL import Image
+from matplotlib.pyplot import get_cmap
 
 
 class Life:
@@ -15,8 +16,10 @@ class Life:
 
         self.density = density
         self.world = np.random.binomial(1, self.density, size=(nx, ny))
+        self.worldc = np.zeros_like(self.world)
 
-        self.conv_edge_mode = "wrap"
+        self.conv_edge_mode = "reflect"
+        self.cmap = get_cmap("viridis_r")
 
     def evolve(self):
         # this awesome implementation comes from
@@ -32,24 +35,32 @@ class Life:
         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
         self.world = np.int8(boolean)
 
-    def write_ppm(self, filepath: str, zoom: int = 5):
-        with open(filepath, "w") as file:
-            file.write("P1\n")
-            file.write("#\n")
-            file.write(f'{self.nx * zoom} {self.ny * zoom}\n')
-            # file.write('255\n')  # max value
+    def evolve2(self):
+        kernel = np.array([[1, 1, 1],
+                           [1,10, 1],
+                           [1, 1, 1]])
 
-            img = self.zoom(zoom)
-            for row in img:
-                file.write(str(row)[1:-1] + "\n")
+        neighbors = scipy.ndimage.filters.convolve(
+            self.world, kernel, mode=self.conv_edge_mode
+        )
 
-    def zoom(self, zoom: int):
-        return np.kron(self.world, np.ones((zoom, zoom))).astype(np.uint8)
+        boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
+        self.world = np.int8(boolean)
 
-    def write_pillow(self, fileapth: str, zoom: int = 5):
-        arr = self.zoom(zoom)
-        img = Image.fromarray(arr * 255)
-        img.save(fileapth)
+        self.worldc[boolean] = 255
+        self.worldc[~boolean] -= 31
+        self.worldc[self.worldc <= 0] = 0
+
+
+def enlarge(arr: np.array, zoom: int) -> np.ndarray:
+    """Enlarge the world array by given zoom level."""
+    return np.kron(arr, np.ones([zoom for _ in range(arr.ndim)])).astype(np.uint8)
+
+
+def write_pillow(arr: np.ndarray, filepath: str):
+    """Writes current world array to given filepath using Pillow."""
+    img = Image.fromarray(arr * 255)
+    img.save(filepath)
 
 
 app = typer.Typer()
@@ -64,19 +75,32 @@ def simulate(
         density: float = 0.5,
         zoom: int = 5,
         animate: bool = False,
-        format: str = "jpg",
+        filetype: str = "jpg",
+        debug: bool = False,
 ):
+    if debug:
+        for k, v in locals().items():
+            msg = typer.style(k, fg="white") + " " + typer.style(str(v), fg="red")
+            typer.echo(msg)
+
     folder = str(datetime.now()).replace(":", "-").split(".")[0].replace(" ", "-")
     os.mkdir(folder)
+
     life = Life(nx, ny, seed, density=density)
 
+    typer.secho("Evolving life..", fg="green")
+    n_digits = len(str(iterations))
     for i in tqdm(range(iterations)):
-        life.evolve()
-        # life.write_ppm(f"{folder}/{i}.ppm", zoom=zoom)
-        life.write_pillow(f"{folder}/{i}.{format}", zoom=zoom)
+        life.evolve2()
+        arr = enlarge(life.worldc, zoom) / 255
+        carr = life.cmap(arr)[:, :, :3] * 255
+
+        write_pillow(carr.astype(np.uint8), f"{folder}/{str(i).zfill(n_digits)}.{filetype}")
 
     if animate:
-        os.system(f'magick convert ./{folder}/*.{format} ./{folder}/animation.gif')
+        typer.echo("Animating image...")
+        os.system(f'magick convert ./{folder}/*.{filetype} ./{folder}/animation.gif')
+        typer.echo("All done.")
 
 
 if __name__ == "__main__":
