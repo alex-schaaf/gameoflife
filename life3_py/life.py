@@ -29,12 +29,12 @@ class Life1(GameOfLife):
     def seed_world(self, density: float = 0.5):
         self.world = np.random.binomial(1, density, size=(self.nx, self.ny))
 
-    def evolve(self, kernel: np.ndarray = None, conv_edge_mode: str = "wrap"):
+    def evolve(self, conv_edge_mode: str = "wrap"):
         # this awesome implementation comes from
         # http://greenteapress.com/complexity/html/thinkcomplexity008.html
         kernel = np.array([[1, 1, 1],
                            [1, 10, 1],
-                           [1, 1, 1]]) if not kernel else kernel
+                           [1, 1, 1]])
 
         neighbors = scipy.ndimage.filters.convolve(
             self.world, kernel, mode=conv_edge_mode
@@ -42,6 +42,31 @@ class Life1(GameOfLife):
 
         boolean = (neighbors == 3) | (neighbors == 12) | (neighbors == 13)
         self.world = np.int8(boolean)
+
+
+class MNCA(GameOfLife):
+    """Multiple Neighborhoods Cellular Automata"""
+    def __init__(self, nx: int, ny: int, seed: int):
+        super().__init__(nx, ny, seed)
+
+    def seed_world(self, density: float = 0.5):
+        self.world = np.random.binomial(1, density, size=(self.nx, self.ny))
+
+    def evolve(self):
+        kernel = kernel_circle(radius=10, hollow=1)
+        kernel += np.pad(kernel_circle(radius=8, hollow=1), 2, constant_values=0)
+        kernel += np.pad(kernel_circle(radius=6, hollow=1), 4, constant_values=0)
+        kernel += np.pad(kernel_circle(radius=4, hollow=1), 6, constant_values=0)
+        kernel += np.pad(kernel_circle(radius=2, hollow=1), 8, constant_values=0)
+        kernel[10, 10] = 1
+
+        neighbors = scipy.ndimage.filters.convolve(
+            self.world, kernel, mode="wrap"
+        )
+
+        self.world[neighbors <= 20] = 0
+        self.world[(neighbors > 20) & (neighbors < 180)] = 1
+        self.world[neighbors >= 180] = 0
 
 
 def enlarge(arr: np.array, zoom: int) -> np.ndarray:
@@ -54,7 +79,7 @@ def write_pillow(arr: np.ndarray, filepath: str):
     Image.fromarray(arr * 255).convert("RGB").save(filepath)
 
 
-def kernel_circle(radius: int = 2, hollow: int = 1):
+def kernel_circle(radius: int = 2, hollow: int = 0):
     d = 2 * radius
     xx, yy = np.mgrid[:d + 1, :d + 1]
     circle = np.sqrt((xx - radius) ** 2 + (yy - radius) ** 2)
@@ -90,14 +115,15 @@ def simulate(
     folder = str(datetime.now()).replace(":", "-").split(".")[0].replace(" ", "-")
     os.mkdir(folder)
 
-    life = Life1(nx, ny, seed)
+    life = MNCA(nx, ny, seed)
     life.seed_world(density=density)
 
     typer.secho("Evolving life..", fg="green")
     n_digits = len(str(iterations))
     for i in tqdm(range(iterations)):
         life.evolve()
-        arr = enlarge(life.world, zoom=zoom)
+        arr = enlarge(life.world, zoom=2)
+        print(np.max(arr))
         write_pillow(arr, f"{folder}/{str(i).zfill(n_digits)}.{filetype}")
 
     if animate:
@@ -107,5 +133,4 @@ def simulate(
 
 
 if __name__ == "__main__":
-    print(kernel_circle(4))
     app()
