@@ -3,6 +3,8 @@
 *.png
 *.gif
 
+.idea/*
+
 Pipfile.lock
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,windows,go,visualstudiocode
