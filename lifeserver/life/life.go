@@ -5,35 +5,35 @@ import "fmt"
 const width = 30
 
 func main() {
-	initialSlice := [width]uint8{}
-	initialSlice[width/2] = 1
+	initialSate := [width]uint8{}
+	initialSate[width/2] = 1
 
 	var p, q, r uint8
 
-	slices := [][width]uint8{}
-	slices = append(slices, initialSlice)
+	states := [][width]uint8{}
+	states = append(states, initialSate)
 
-	for slices[len(slices)-1][0] == 0 {
-		currentSlice := slices[len(slices)-1]
-		fmt.Println(currentSlice)
-		newSlice := [width]uint8{}
+	for states[len(states)-1][0] == 0 {
+		currentState := states[len(states)-1]
+		fmt.Println(currentState)
+		newState := [width]uint8{}
 		for i := 0; i < width; i++ {
 
 			if i > 0 {
-				p = currentSlice[i-1]
+				p = currentState[i-1]
 			}
 
-			q = currentSlice[i]
+			q = currentState[i]
 
 			if i < width-1 {
-				r = currentSlice[i+1]
+				r = currentState[i+1]
 			}
 
 			result := p ^ (q | r)
 
-			newSlice[i] = result
+			newState[i] = result
 		}
-		slices = append(slices, newSlice)
+		states = append(states, newState)
 	}
 
 }
