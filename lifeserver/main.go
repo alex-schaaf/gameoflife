@@ -30,6 +30,8 @@ func handleLife(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method is not supported.", http.StatusNotFound)
 		return
 	}
+	enableCORS(&w)
+
 	result := life.RunLife(30)
 	lifeResult := LifeResult{30, result}
 	err := json.NewEncoder(w).Encode(lifeResult.Result)
@@ -37,4 +39,8 @@ func handleLife(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+}
+
+func enableCORS(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
